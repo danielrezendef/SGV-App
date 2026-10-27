@@ -3,7 +3,7 @@
   'use strict';
   var SGV = window.SGV, h = SGV.h, ui = SGV.ui, storage = SGV.storage;
 
-  var COLORS = ['#ff6b35', '#22d3ee', '#a3e635', '#f472b6', '#facc15', '#a78bfa', '#34d399', '#fb7185'];
+  var COLORS = ['#ff8a3d', '#4cc3f1', '#f2d49b', '#ff7a9c', '#7de0c1', '#ffd24d', '#9aa8ff', '#f59e8b'];
   var SIZES = [2, 3, 4, 6];
 
   var players = [];          // [{id, name}]

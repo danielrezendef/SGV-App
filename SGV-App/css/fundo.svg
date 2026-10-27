@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="b1" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".7"/></filter>
+    <filter id="b9" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="b18" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="18"/></filter>
+    <pattern id="net" width="52" height="52" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <path d="M0 0H52M0 0V52" stroke="#fff" stroke-width="1.8" fill="none"/>
+    </pattern>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".6" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="m"><rect width="1600" height="1000" fill="url(#fade)"/></mask>
+    <radialGradient id="sun" cx="78%" cy="76%" r="55%">
+      <stop offset="0" stop-color="#ffb454" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#ffb454" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ball" cx=".32" cy=".28" r=".95">
+      <stop offset="0" stop-color="#fff6e0" stop-opacity=".95"/>
+      <stop offset=".55" stop-color="#ebcf94" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#2b8fc2" stop-opacity=".3"/>
+    </radialGradient>
+    <g id="seams" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".5">
+      <path d="M32 5c2 14-4 23-18 29"/><path d="M8.5 20c12 1 21 7 24 18"/><path d="M32 5c11 4 18 12 21 22"/>
+      <path d="M53 27c-12-3-21 0-27 8"/><path d="M14 34c4 10 11 17 22 21"/><path d="M36 55c-1-11 3-20 12-26"/>
+    </g>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#sun)"/>
+
+  <!-- rede -->
+  <g mask="url(#m)" opacity=".2" filter="url(#b1)"><rect width="1600" height="1000" fill="url(#net)"/></g>
+
+  <!-- bola grande desfocada -->
+  <g filter="url(#b9)">
+    <circle cx="1240" cy="700" r="360" fill="url(#ball)"/>
+    <g transform="translate(1240 700) scale(13.3) translate(-32 -32)"><use href="#seams"/></g>
+  </g>
+
+  <!-- bola pequena, mais desfocada (profundidade) -->
+  <g filter="url(#b18)" opacity=".7">
+    <circle cx="200" cy="820" r="170" fill="#ff9a45" fill-opacity=".55"/>
+    <g transform="translate(200 820) scale(6.3) translate(-32 -32)"><use href="#seams"/></g>
+  </g>
+</svg>

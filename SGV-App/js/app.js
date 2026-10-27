@@ -97,7 +97,7 @@
     document.documentElement.setAttribute('data-theme', t);
     document.getElementById('theme-icon').setAttribute('href', t === 'dark' ? '#i-sun' : '#i-moon');
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#0b0d14' : '#f3f5fa');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#04202f' : '#f4e6c8');
   }
 
   /* ---- Navegação por hash (sem recarregar) ---- */
