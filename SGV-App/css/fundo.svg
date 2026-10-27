@@ -24,6 +24,11 @@
       <path d="M32 5c2 14-4 23-18 29"/><path d="M8.5 20c12 1 21 7 24 18"/><path d="M32 5c11 4 18 12 21 22"/>
       <path d="M53 27c-12-3-21 0-27 8"/><path d="M14 34c4 10 11 17 22 21"/><path d="M36 55c-1-11 3-20 12-26"/>
     </g>
+    <clipPath id="cp"><circle cx="32" cy="32" r="27"/></clipPath>
+    <g id="paint">
+      <path d="M-6 46C16 40 38 22 70 24V42C40 40 22 56-6 64Z" fill="#1d5fc4" fill-opacity=".9"/>
+      <path d="M-6 10C20 14 36 6 46-8H64C54 14 30 28-6 30Z" fill="#ee6a1c" fill-opacity=".95"/>
+    </g>
   </defs>
 
   <rect width="1600" height="1000" fill="url(#sun)"/>
@@ -34,12 +39,12 @@
   <!-- bola grande desfocada -->
   <g filter="url(#b9)">
     <circle cx="1240" cy="700" r="360" fill="url(#ball)"/>
-    <g transform="translate(1240 700) scale(13.3) translate(-32 -32)"><use href="#seams"/></g>
+    <g transform="translate(1240 700) scale(13.3) translate(-32 -32)"><g clip-path="url(#cp)"><use href="#paint"/></g><use href="#seams"/></g>
   </g>
 
   <!-- bola pequena, mais desfocada (profundidade) -->
   <g filter="url(#b18)" opacity=".7">
-    <circle cx="200" cy="820" r="170" fill="#ff9a45" fill-opacity=".55"/>
-    <g transform="translate(200 820) scale(6.3) translate(-32 -32)"><use href="#seams"/></g>
+    <circle cx="200" cy="820" r="170" fill="url(#ball)"/>
+    <g transform="translate(200 820) scale(6.3) translate(-32 -32)"><g clip-path="url(#cp)"><use href="#paint"/></g><use href="#seams"/></g>
   </g>
 </svg>
