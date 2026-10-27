@@ -137,7 +137,7 @@
 
     Object.keys(modules).forEach(function (k) { if (modules[k].init) modules[k].init(); });
     window.addEventListener('hashchange', route);
-    if (!location.hash || location.hash === '#/home') document.getElementById('view-home').classList.add('intro');
+    if (!location.hash || location.hash === '#/home') { document.getElementById('view-home').classList.add('intro'); var root = document.documentElement; root.classList.add('no-scroll'); setTimeout(function () { root.classList.remove('no-scroll'); }, 3600); }
     route();
   });
 })();

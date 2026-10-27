@@ -104,14 +104,15 @@ a { color: inherit; text-decoration: none; }
 .tagline { margin-top: 4px; }
 
 /* Abertura: escreve SGVApp no centro, brilha e revela as opções */
-.intro .brand { animation: brandRise .7s var(--ease) 1.9s backwards; }
+.intro .brand { animation: brandRise .9s var(--ease) 1.9s backwards; }
 .intro .brand span { animation: write .35s var(--ease) calc(var(--n) * .13s + .2s) backwards, shine 1s ease-in-out 1.1s; }
 .intro .tagline { animation: fadeUp .6s var(--ease) 2.3s backwards; }
 .intro .home-actions { animation: fadeUp .6s var(--ease) 2.5s backwards; }
 .intro .credits { animation: fadeUp .6s var(--ease) 2.7s backwards; }
 @keyframes write { from { opacity: 0; transform: translateY(14px) scale(.7); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes shine { 50% { text-shadow: 0 0 22px currentColor, 0 0 60px currentColor; transform: scale(1.06); } }
-@keyframes brandRise { from { transform: translateY(var(--shift, 110px)); } to { transform: none; } }
+@keyframes brandRise { from { transform: translateY(var(--shift, 110px)) scale(1.6); } to { transform: none; } }
+html.no-scroll, html.no-scroll body { overflow: hidden; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 .intro .brand { --shift: 110px; }
 .tagline { color: var(--muted); font-size: clamp(1rem, 3.6vw, 1.25rem); }
