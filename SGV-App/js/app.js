@@ -92,10 +92,17 @@
     });
   }
 
-  /* ---- Tema ---- */
-  function applyTheme(t) {
+  /* ---- Tema: automático (segue o sistema), claro ou escuro ---- */
+  var MODES = ['auto', 'light', 'dark'];
+  var MODE_LABEL = { auto: 'automático', light: 'claro', dark: 'escuro' };
+  var MODE_ICON = { auto: '#i-auto', light: '#i-sun', dark: '#i-moon' };
+  var systemDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function applyTheme(mode) {
+    var t = mode === 'auto' ? (systemDark && !systemDark.matches ? 'light' : 'dark') : mode;
     document.documentElement.setAttribute('data-theme', t);
-    document.getElementById('theme-icon').setAttribute('href', t === 'dark' ? '#i-sun' : '#i-moon');
+    document.getElementById('theme-icon').setAttribute('href', MODE_ICON[mode]);
+    document.getElementById('btn-theme').setAttribute('aria-label', 'Tema: ' + MODE_LABEL[mode] + '. Toque para alternar');
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', t === 'dark' ? '#04202f' : '#f4e6c8');
   }
@@ -127,13 +134,20 @@
     toastEl = document.getElementById('toast');
     initDialog();
 
-    var settings = storage.get('settings', { theme: 'dark' });
-    applyTheme(settings.theme === 'light' ? 'light' : 'dark');
+    var settings = storage.get('settings', {});
+    if (MODES.indexOf(settings.theme) < 0) settings.theme = 'auto';
+    applyTheme(settings.theme);
     document.getElementById('btn-theme').addEventListener('click', function () {
-      settings.theme = settings.theme === 'light' ? 'dark' : 'light';
+      settings.theme = MODES[(MODES.indexOf(settings.theme) + 1) % MODES.length];
       storage.set('settings', settings);
       applyTheme(settings.theme);
+      toast('Tema ' + MODE_LABEL[settings.theme]);
     });
+    if (systemDark) {
+      var follow = function () { if (settings.theme === 'auto') applyTheme('auto'); };
+      if (systemDark.addEventListener) systemDark.addEventListener('change', follow);
+      else if (systemDark.addListener) systemDark.addListener(follow);
+    }
 
     Object.keys(modules).forEach(function (k) { if (modules[k].init) modules[k].init(); });
     window.addEventListener('hashchange', route);
