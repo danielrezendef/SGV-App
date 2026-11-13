@@ -12,6 +12,7 @@
   var result = null;         // {teams:[{name,color,players:[]}], bench:[]}
   var picked = [];           // índices das equipes escolhidas para o placar
   var drawing = false;
+  var pairs = {};            // histórico: "ana|beto" -> vezes juntos
   var el = {};
 
   /* ---- Sorteio ---- */
@@ -32,14 +33,49 @@
     return a;
   }
 
-  function buildTeams(names) {
-    var shuffled = fisherYates(names);
+  function splitTeams(shuffled) {
     var count = Math.floor(shuffled.length / size);
     var teams = [];
     for (var i = 0; i < count; i++) {
       teams.push({ name: 'Equipe ' + (i + 1), color: COLORS[i % COLORS.length], players: shuffled.slice(i * size, (i + 1) * size) });
     }
     return { teams: teams, bench: shuffled.slice(count * size) };
+  }
+
+  /* Histórico de duplas: quantas vezes cada par já jogou junto. */
+  function pairKey(a, b) {
+    a = a.toLowerCase(); b = b.toLowerCase();
+    return a < b ? a + '|' + b : b + '|' + a;
+  }
+
+  function forEachPair(res, fn) {
+    res.teams.forEach(function (t) {
+      for (var i = 0; i < t.players.length; i++)
+        for (var j = i + 1; j < t.players.length; j++) fn(pairKey(t.players[i], t.players[j]));
+    });
+  }
+
+  function repeatCost(res) {
+    var c = 0;
+    forEachPair(res, function (k) { c += pairs[k] || 0; });
+    return c;
+  }
+
+  function recordPairs(res) {
+    forEachPair(res, function (k) { pairs[k] = (pairs[k] || 0) + 1; });
+    storage.set('pairs', pairs);
+  }
+
+  /* smart: testa várias divisões aleatórias e fica com a que menos repete duplas. */
+  function buildTeams(names, smart) {
+    var best = splitTeams(fisherYates(names));
+    if (!smart) return best;
+    var bestCost = repeatCost(best);
+    for (var n = 0; n < 400 && bestCost > 0; n++) {
+      var cand = splitTeams(fisherYates(names)), c = repeatCost(cand);
+      if (c < bestCost) { best = cand; bestCost = c; }
+    }
+    return best;
   }
 
   function presentNames() {
@@ -193,10 +229,11 @@
     el.result.hidden = false;
     el.draw.disabled = el.redraw.disabled = true;
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var final = buildTeams(names);
+    var final = buildTeams(names, true);
 
     function finish() {
       result = final;
+      recordPairs(result);
       storage.set('teams', result);
       renderResult(result, 'reveal');
       updateStart();
@@ -210,8 +247,8 @@
     el.start.disabled = true;
     el.startLabel.textContent = 'Sorteando…';
     el.result.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    var timer = setInterval(function () { renderResult(buildTeams(names), 'shuffle'); }, 90);
-    renderResult(buildTeams(names), 'shuffle');
+    var timer = setInterval(function () { renderResult(buildTeams(names, false), 'shuffle'); }, 90);
+    renderResult(buildTeams(names, false), 'shuffle');
     setTimeout(function () { clearInterval(timer); finish(); }, 1500);
   }
 
@@ -266,6 +303,8 @@
     present = new Set(Array.isArray(ids) ? ids : players.map(function (p) { return p.id; }));
     var s = storage.get('size', 4);
     size = SIZES.indexOf(s) >= 0 ? s : 4;
+    var hist = storage.get('pairs', {});
+    pairs = hist && typeof hist === 'object' ? hist : {};
     var saved = storage.get('teams', null);
     if (saved && Array.isArray(saved.teams) && saved.teams.length >= 2) result = { teams: saved.teams, bench: saved.bench || [] };
 
@@ -294,6 +333,9 @@
     });
     document.getElementById('btn-none').addEventListener('click', function () {
       present.clear(); saveRoster(); renderPlayers();
+    });
+    document.getElementById('btn-clear-pairs').addEventListener('click', function () {
+      pairs = {}; storage.set('pairs', pairs); ui.toast('Histórico de duplas zerado');
     });
     el.draw.addEventListener('click', draw);
     el.redraw.addEventListener('click', draw);
