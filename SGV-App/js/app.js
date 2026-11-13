@@ -135,7 +135,7 @@
     initDialog();
 
     var settings = storage.get('settings', {});
-    if (MODES.indexOf(settings.theme) < 0) settings.theme = 'auto';
+    if (settings.v !== 2 || MODES.indexOf(settings.theme) < 0) { settings.theme = 'auto'; settings.v = 2; storage.set('settings', settings); } // padrão: tema do sistema
     applyTheme(settings.theme);
     document.getElementById('btn-theme').addEventListener('click', function () {
       settings.theme = MODES[(MODES.indexOf(settings.theme) + 1) % MODES.length];
