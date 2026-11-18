@@ -191,9 +191,53 @@
       var saved = SGV.campeonato && SGV.campeonato.finishMatch(state.match, sa, sb);
       state = sanitize(null);
       save();
-      if (!saved) ui.toast('Partida não encontrada no campeonato');
-      location.hash = saved ? '#/campeonato' : '#/home';
+      if (!saved) {
+        ui.toast('Partida não encontrada no campeonato');
+        location.hash = '#/home';
+        return;
+      }
+      celebrate(win.name, win.color, Math.max(sa, sb), Math.min(sa, sb), function () { location.hash = '#/campeonato'; });
     });
+  }
+
+  /* Tela de vitória: troféu, nome da equipe vencedora e placar final. Toque para continuar. */
+  function celebrate(name, color, hi, lo, done) {
+    var h = SGV.h, closed = false, timer;
+    var sparks = h('div', { class: 'win-sparks', 'aria-hidden': 'true' });
+    for (var i = 0; i < 16; i++) {
+      var ang = (i / 16) * Math.PI * 2 + (i % 2 ? 0.15 : 0), dist = 110 + (i % 3) * 40;
+      sparks.appendChild(h('i', { style: '--x:' + Math.round(Math.cos(ang) * dist) + 'px;--y:' + Math.round(Math.sin(ang) * dist) + 'px;--dl:' + (i % 4) * 40 + 'ms' }));
+    }
+    var cup = SGV.icon('cup');
+    cup.setAttribute('class', 'ico win-cup');
+    var ov = h('div', { class: 'win-ov', style: '--c:' + (color || '#f5c542'), role: 'button', tabindex: '0', 'aria-label': 'Vitória de ' + name + '. Toque para continuar' },
+      h('div', { class: 'win-rays', 'aria-hidden': 'true' }),
+      h('div', { class: 'win-ring', 'aria-hidden': 'true' }),
+      h('div', { class: 'win-ring win-ring--2', 'aria-hidden': 'true' }),
+      sparks,
+      h('div', { class: 'win-card' },
+        cup,
+        h('span', { class: 'win-eyebrow', text: 'Vitória' }),
+        h('h2', { class: 'win-name', text: name }),
+        h('div', { class: 'win-score' }, h('em', { text: String(hi) }), h('s', { text: '×' }), h('span', { text: String(lo) })),
+        h('span', { class: 'win-tip', text: 'Toque para continuar' })));
+
+    function close() {
+      if (closed) return;
+      closed = true;
+      clearTimeout(timer);
+      document.removeEventListener('keydown', onKey);
+      ov.classList.add('out');
+      done();                                   // o campeonato já aparece por baixo enquanto a tela some
+      setTimeout(function () { ov.remove(); }, 450);
+    }
+    function onKey(e) { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); close(); } }
+    ov.addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(ov);
+    ov.focus();
+    if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
+    timer = setTimeout(close, 3200);
   }
 
   function init() {

@@ -10,7 +10,6 @@
   var present = new Set();   // ids marcados como presentes
   var size = 4;
   var result = null;         // {teams:[{name,color,players:[]}], bench:[]}
-  var picked = [];           // índices das equipes escolhidas para o placar
   var drawing = false;
   var pairs = {};            // histórico: "ana|beto" -> vezes juntos
   var el = {};
@@ -155,10 +154,18 @@
     updateCount();
   }
 
+  function allPresent() { return players.length > 0 && present.size >= players.length; }
+
   function updateCount() {
     var n = present.size;
     el.badge.textContent = n + (n === 1 ? ' presente' : ' presentes') + ' de ' + players.length;
+    /* o botão alterna entre marcar e desmarcar todos */
+    el.toggleAll.textContent = allPresent() ? 'Desmarcar todos' : 'Marcar todos';
+    el.toggleAll.disabled = players.length === 0;
+    el.clearAll.disabled = players.length === 0 && !result && !hasCampeonato();
   }
+
+  function hasCampeonato() { return !!storage.get('camp', null); }
 
   /* ---- Tamanho da equipe ---- */
   function renderSizes() {
@@ -178,21 +185,9 @@
     el.grid.classList.toggle('shuffling', mode === 'shuffle');
     el.grid.classList.toggle('reveal', mode === 'reveal');
     res.teams.forEach(function (t, i) {
-      var pressed = picked.indexOf(i) >= 0;
-      var card = h('div', {
-        class: 'team', role: 'button', tabindex: mode === 'shuffle' ? '-1' : '0', 'aria-pressed': String(pressed),
-        'aria-label': t.name + ': ' + t.players.join(', '),
-        style: '--c:' + t.color + ';--i:' + i
-      },
-        h('div', { class: 'team-title' }, h('strong', { text: t.name }), h('span', { class: 'team-tag', text: picked.indexOf(i) === 0 ? 'A' : 'B' })),
-        h.apply(null, ['ul', {}].concat(t.players.map(function (n) { return h('li', { text: n }); }))));
-      if (mode !== 'shuffle') {
-        card.addEventListener('click', function () { togglePick(i); });
-        card.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePick(i); }
-        });
-      }
-      el.grid.appendChild(card);
+      el.grid.appendChild(h('div', { class: 'team', style: '--c:' + t.color + ';--i:' + i },
+        h('div', { class: 'team-title' }, h('strong', { text: t.name })),
+        h.apply(null, ['ul', {}].concat(t.players.map(function (n) { return h('li', { text: n }); })))));
     });
     if (res.bench.length) {
       el.grid.appendChild(h('div', { class: 'team team--bench', style: '--i:' + res.teams.length },
@@ -201,20 +196,12 @@
     }
   }
 
-  function togglePick(i) {
-    var pos = picked.indexOf(i);
-    if (pos >= 0) picked.splice(pos, 1);
-    else { if (picked.length === 2) picked.shift(); picked.push(i); }
-    renderResult(result, null);
-    updateStart();
-  }
-
-  function updateStart() {
-    var ok = picked.length === 2;
-    el.start.disabled = !ok;
-    el.startLabel.textContent = ok
-      ? 'Abrir placar: ' + result.teams[picked[0]].name + ' × ' + result.teams[picked[1]].name
-      : 'Escolha duas equipes';
+  /* Botão do campeonato: mostra quantas equipes estão prontas; fica inativo enquanto sorteia. */
+  function updateCamp(busy) {
+    el.start.classList.toggle('is-busy', !!busy);
+    el.start.setAttribute('aria-disabled', String(!!busy));
+    var n = result ? result.teams.length : 0;
+    el.startLabel.textContent = busy ? 'Sorteando…' : n + ' equipes prontas';
   }
 
   function draw() {
@@ -225,9 +212,8 @@
       return;
     }
     drawing = true;
-    picked = [];
     el.result.hidden = false;
-    el.draw.disabled = el.redraw.disabled = true;
+    el.draw.disabled = true;
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     var final = buildTeams(names, true);
 
@@ -236,16 +222,15 @@
       recordPairs(result);
       storage.set('teams', result);
       renderResult(result, 'reveal');
-      updateStart();
+      updateCamp(false);
       drawing = false;
-      el.draw.disabled = el.redraw.disabled = false;
+      el.draw.disabled = false;
       if (navigator.vibrate) navigator.vibrate(25);
       el.result.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     }
 
     if (reduce) return finish();
-    el.start.disabled = true;
-    el.startLabel.textContent = 'Sorteando…';
+    updateCamp(true);
     el.result.scrollIntoView({ behavior: 'smooth', block: 'start' });
     var timer = setInterval(function () { renderResult(buildTeams(names, false), 'shuffle'); }, 90);
     renderResult(buildTeams(names, false), 'shuffle');
@@ -254,7 +239,7 @@
 
   /* ---- WhatsApp ---- */
   function whatsappText() {
-    var lines = ['🏐 *SGVApp — Equipes*', ''];
+    var lines = ['🏐 *VoleiApp — Equipes*', ''];
     result.teams.forEach(function (t) {
       lines.push('*' + t.name + '*');
       t.players.forEach(function (n) { lines.push('• ' + n); });
@@ -289,9 +274,10 @@
     el.list = document.getElementById('player-list');
     el.empty = document.getElementById('players-empty');
     el.badge = document.getElementById('count-badge');
+    el.toggleAll = document.getElementById('btn-all');
+    el.clearAll = document.getElementById('btn-none');
     el.seg = document.getElementById('size-seg');
     el.draw = document.getElementById('btn-draw');
-    el.redraw = document.getElementById('btn-redraw');
     el.result = document.getElementById('result');
     el.grid = document.getElementById('teams-grid');
     el.start = document.getElementById('btn-start');
@@ -310,7 +296,7 @@
 
     renderPlayers();
     renderSizes();
-    if (result) { el.result.hidden = false; renderResult(result, null); updateStart(); }
+    if (result) { el.result.hidden = false; renderResult(result, null); updateCamp(false); }
 
     document.getElementById('form-player').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -328,29 +314,50 @@
       var n = addPlayers(text);
       ui.toast(n ? n + (n === 1 ? ' jogador adicionado' : ' jogadores adicionados') : 'Nenhum jogador novo na lista');
     });
-    document.getElementById('btn-all').addEventListener('click', function () {
-      players.forEach(function (p) { present.add(p.id); }); saveRoster(); renderPlayers();
+    el.toggleAll.addEventListener('click', function () {
+      if (allPresent()) present.clear();
+      else players.forEach(function (p) { present.add(p.id); });
+      saveRoster(); renderPlayers();
     });
-    document.getElementById('btn-none').addEventListener('click', function () {
-      present.clear(); saveRoster(); renderPlayers();
+    el.clearAll.addEventListener('click', function () {
+      if (drawing) return;
+      var parts = [];
+      if (players.length) parts.push('a lista de ' + players.length + (players.length === 1 ? ' jogador' : ' jogadores'));
+      if (result) parts.push('as equipes sorteadas');
+      if (hasCampeonato()) parts.push('o campeonato em andamento');
+      if (!parts.length) return;
+      var msg = 'Isso apaga ' + parts.join(', ').replace(/, ([^,]*)$/, ' e $1') + '. Não dá para desfazer.';
+      ui.confirm('Limpar tudo?', msg, 'Limpar tudo').then(function (ok) {
+        if (!ok) return;
+        players = [];
+        present.clear();
+        saveRoster();
+        /* equipes sorteadas */
+        result = null;
+        storage.set('teams', null);
+        el.grid.textContent = '';
+        el.result.hidden = true;
+        /* campeonato ativo (e o jogo dele aberto no placar) */
+        storage.set('camp', null);
+        if (SGV.placar && SGV.placar.clearMatch) SGV.placar.clearMatch();
+        renderPlayers();
+        ui.toast('Tudo limpo');
+      });
     });
     document.getElementById('btn-clear-pairs').addEventListener('click', function () {
       pairs = {}; storage.set('pairs', pairs); ui.toast('Histórico de duplas zerado');
     });
     el.draw.addEventListener('click', draw);
-    el.redraw.addEventListener('click', draw);
     document.getElementById('btn-copy').addEventListener('click', function () {
       if (!result) return;
       copyText(whatsappText()).then(
         function () { ui.toast('Equipes copiadas! Cole no WhatsApp'); },
         function () { ui.toast('Não foi possível copiar'); });
     });
-    el.start.addEventListener('click', function () {
-      if (picked.length !== 2) return;
-      var a = result.teams[picked[0]], b = result.teams[picked[1]];
-      SGV.placar.startWith(a, b);
+    el.start.addEventListener('click', function (e) {
+      if (drawing) e.preventDefault();       // ainda sorteando: não abre o campeonato
     });
   }
 
-  SGV.register('sorteio', { init: init });
+  SGV.register('sorteio', { init: init, enter: function () { if (el.badge) updateCount(); } });
 })();

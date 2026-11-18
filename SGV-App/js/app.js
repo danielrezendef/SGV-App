@@ -129,7 +129,7 @@
     });
     if (name !== 'home') document.getElementById('view-home').classList.remove('intro');
     window.scrollTo(0, 0);
-    document.title = name === 'home' ? 'SGVApp' : 'SGVApp · ' + TITLES[name];
+    document.title = name === 'home' ? 'VoleiApp' : 'VoleiApp · ' + TITLES[name];
   }
 
   SGV.h = h;

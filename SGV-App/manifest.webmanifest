@@ -1,6 +1,6 @@
 {
-  "name": "SGVApp",
-  "short_name": "SGVApp",
+  "name": "VoleiApp",
+  "short_name": "VoleiApp",
   "description": "Sorteio de equipes e placar interativo para jogos de vôlei.",
   "start_url": "./index.html",
   "scope": "./",

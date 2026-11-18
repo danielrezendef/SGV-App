@@ -19,7 +19,6 @@
   var seeded = '';
   var keepOld = false;   // permite continuar um campeonato de sorteio antigo
   var token = 0;         // cancela animações do sorteio de chaves ao sair
-  var unlockReady = false;
   var el = {};
 
   /* ---------- utilidades ---------- */
@@ -515,7 +514,7 @@
     return h('section', { class: 'camp-hero' },
       h('div', { class: 'hero-badge' }, ico('trophy')),
       h('div', { class: 'hero-txt' },
-        h('span', { class: 'eyebrow', text: 'Campeonato SGV' }),
+        h('span', { class: 'eyebrow', text: 'Campeonato VoleiApp' }),
         h('h3', { text: phase }),
         h('p', { text: cur.teams.length + ' equipes · ' + (cur.direct ? 'eliminatória direta' : g + (g === 1 ? ' chave' : ' chaves')) })),
       h('div', { class: 'prog' },
@@ -613,7 +612,7 @@
     wrap.appendChild(h('section', { class: 'camp-intro' },
       h('div', { class: 'camp-trophy' }, ico('trophy')),
       h('div', {},
-        h('span', { class: 'eyebrow', text: 'Campeonato SGV' }),
+        h('span', { class: 'eyebrow', text: 'Campeonato VoleiApp' }),
         h('h3', { text: 'Monte o campeonato' }),
         h('p', { class: 'hint', text: 'Chaves de todos contra todos com fase final, ou direto para o mata-mata.' }))));
 
@@ -766,7 +765,6 @@
       actions.textContent = '';
       actions.appendChild(h('button', { class: 'btn btn--ghost', type: 'button', onclick: startDraw }, ico('shuffle'), h('span', { text: 'Sortear de novo' })));
       actions.appendChild(h('button', { class: 'btn btn--accent', type: 'button', onclick: begin }, ico('flag'), h('span', { text: 'Iniciar campeonato' })));
-      if (!skip) confetti();
     }
 
     var pending = 0;   // chips ainda em voo (vários voam ao mesmo tempo)
@@ -784,8 +782,8 @@
         if (--pending === 0 && k >= place.length) finishDraw();
       }
       if (skip || reduced()) { land(); setTimeout(step, 0); return; }
+      fly(src, slot, function () { if (alive()) land(); });   // mede o chip antes de escondê-lo
       src.classList.add('gone');
-      fly(src, slot, function () { if (alive()) land(); });
       setTimeout(step, 130);
     }
     setTimeout(step, reduced() ? 0 : 200);
@@ -829,23 +827,6 @@
     render();
   }
 
-  /* ---------- botão da tela inicial ---------- */
-  function refreshLock() {
-    var btn = document.getElementById('btn-camp');
-    if (!btn) return;
-    var n = loadTeams().length, ok = n >= 2, was = btn.classList.contains('is-locked');
-    btn.classList.toggle('is-locked', !ok);
-    btn.setAttribute('aria-disabled', String(!ok));
-    document.getElementById('camp-sub').textContent = ok ? n + ' equipes prontas' : 'Libera após o sorteio';
-    if (ok && was && unlockReady) {
-      btn.classList.remove('unlock');
-      void btn.offsetWidth;
-      btn.classList.add('unlock');
-      setTimeout(function () { ui.toast('Campeonato liberado!'); }, 500);
-    }
-    unlockReady = true;
-  }
-
   function init() {
     el.view = document.getElementById('view-campeonato');
     el.body = document.getElementById('camp-body');
@@ -860,18 +841,7 @@
       });
     });
 
-    var btn = document.getElementById('btn-camp');
-    btn.addEventListener('click', function (e) {
-      if (unlocked()) return;
-      e.preventDefault();
-      shake(btn);
-      ui.toast('Sorteie as equipes primeiro para liberar o Campeonato');
-    });
-    btn.addEventListener('animationend', function () { btn.classList.remove('shake'); });
-    refreshLock();
-
     window.addEventListener('hashchange', function () {
-      refreshLock();
       if (!/^#\/campeonato/.test(location.hash)) { token++; clearFlies(); }
     });
   }
