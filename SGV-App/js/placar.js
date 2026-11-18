@@ -6,7 +6,9 @@
   var DEFAULT = {
     a: { name: 'Equipe A', score: 0, color: '' },
     b: { name: 'Equipe B', score: 0, color: '' },
-    history: []
+    history: [],
+    match: null,   // id da partida do campeonato (null = placar livre)
+    label: ''      // ex.: "Chave A · Rodada 2"
   };
   var state;
   var el = {};
@@ -21,6 +23,10 @@
       if (typeof t.color === 'string' && /^#[0-9a-f]{6}$/i.test(t.color)) d[k].color = t.color;
     });
     if (Array.isArray(s.history)) d.history = s.history.filter(function (x) { return x === 'a' || x === 'b'; }).slice(-500);
+    if (typeof s.match === 'string' && s.match.length <= 40) {
+      d.match = s.match;
+      if (typeof s.label === 'string') d.label = s.label.slice(0, 40);
+    }
     return d;
   }
 
@@ -36,9 +42,22 @@
     else el['side' + k].style.removeProperty('--c');
   }
 
+  /* Partida de campeonato: voltar leva ao campeonato, mostra "Finalizar" e trava os nomes. */
+  function syncContext() {
+    var inMatch = !!state.match;
+    el.back.setAttribute('href', inMatch ? '#/campeonato' : '#/home');
+    el.back.setAttribute('aria-label', inMatch ? 'Voltar ao campeonato' : 'Voltar ao início');
+    el.brandDef.hidden = inMatch;
+    el.brandMatch.hidden = !inMatch;
+    el.brandMatch.textContent = state.label || 'Campeonato';
+    el.finish.hidden = !inMatch;
+    el.rename.hidden = inMatch;
+  }
+
   function render() {
     paint('a'); paint('b');
     el.undo.disabled = state.history.length === 0;
+    syncContext();
   }
 
   function restart(node, cls) {
@@ -106,9 +125,18 @@
     el.full.lastElementChild.textContent = on ? 'Sair' : 'Tela cheia';
   }
 
+  /* Guarda o andamento de uma partida de campeonato antes de trocar o placar. */
+  function parkMatch() {
+    if (state.match && SGV.campeonato) SGV.campeonato.savePartial(state.match, state.a.score, state.b.score);
+  }
+
+  /* Placar livre em andamento (fora do campeonato) pede confirmação antes de ser substituído. */
+  function freeGameBusy() { return !state.match && state.a.score + state.b.score > 0; }
+
   /* Chamado pelo sorteio: inicia o placar com duas equipes. */
   function startWith(a, b) {
     function go() {
+      parkMatch();
       state = sanitize({
         a: { name: a.name, score: 0, color: a.color },
         b: { name: b.name, score: 0, color: b.color },
@@ -117,9 +145,55 @@
       save();
       location.hash = '#/placar';
     }
-    if (state.a.score + state.b.score > 0) {
+    if (freeGameBusy()) {
       ui.confirm('Substituir placar atual?', 'Há uma partida em andamento. Iniciar uma nova zera a pontuação.', 'Iniciar novo').then(function (ok) { if (ok) go(); });
     } else go();
+  }
+
+  /* Chamado pelo campeonato: c = {id, label, a:{name,color,score}, b:{...}} */
+  function startMatch(c) {
+    var same = state.match === c.id && state.a.name === c.a.name && state.b.name === c.b.name;
+    function go() {
+      if (same) state.label = c.label;
+      else {
+        parkMatch();
+        state = sanitize({
+          a: { name: c.a.name, score: c.a.score || 0, color: c.a.color },
+          b: { name: c.b.name, score: c.b.score || 0, color: c.b.color },
+          history: [], match: c.id, label: c.label
+        });
+      }
+      save();
+      location.hash = '#/placar';
+    }
+    if (!same && freeGameBusy()) {
+      ui.confirm('Substituir placar atual?', 'Há uma partida livre em andamento. Abrir este jogo do campeonato zera a pontuação dela.', 'Abrir jogo').then(function (ok) { if (ok) go(); });
+    } else go();
+  }
+
+  function clearMatch() {
+    if (!state.match) return;
+    state = sanitize(null);
+    save();
+    if (el.numa) render();
+  }
+
+  /* Encerra a partida do campeonato: registra o resultado e volta às chaves. */
+  function finish() {
+    var sa = state.a.score, sb = state.b.score;
+    if (sa === sb) {
+      ui.toast(sa + sb === 0 ? 'Marque os pontos antes de finalizar' : 'Empate! Decida o vencedor antes de finalizar');
+      return;
+    }
+    var win = sa > sb ? state.a : state.b;
+    ui.confirm('Encerrar partida?', win.name + ' vence por ' + Math.max(sa, sb) + ' × ' + Math.min(sa, sb) + '. O resultado entra no campeonato.', 'Finalizar').then(function (ok) {
+      if (!ok) return;
+      var saved = SGV.campeonato && SGV.campeonato.finishMatch(state.match, sa, sb);
+      state = sanitize(null);
+      save();
+      if (!saved) ui.toast('Partida não encontrada no campeonato');
+      location.hash = saved ? '#/campeonato' : '#/home';
+    });
   }
 
   function init() {
@@ -134,6 +208,12 @@
     });
     el.undo = document.getElementById('btn-undo');
     el.full = document.getElementById('btn-full');
+    el.rename = document.getElementById('btn-rename');
+    el.finish = document.getElementById('btn-finish');
+    el.back = document.getElementById('placar-back');
+    el.brandDef = document.getElementById('brand-def');
+    el.brandMatch = document.getElementById('brand-match');
+    el.finish.addEventListener('click', finish);
     el.undo.addEventListener('click', undo);
     document.getElementById('btn-reset').addEventListener('click', reset);
     document.getElementById('btn-rename').addEventListener('click', rename);
@@ -145,6 +225,6 @@
   }
 
   state = sanitize(storage.get('placar', null));
-  SGV.placar = { startWith: startWith };
+  SGV.placar = { startWith: startWith, startMatch: startMatch, clearMatch: clearMatch };
   SGV.register('placar', { init: init, enter: function () { if (el.numa) render(); } });
 })();

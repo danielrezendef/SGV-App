@@ -25,6 +25,7 @@
   <meta name="apple-mobile-web-app-title" content="SGVApp">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/campeonato.css">
 </head>
 <body>
 
@@ -48,6 +49,11 @@
     <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/></g></symbol>
     <symbol id="i-auto" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></g></symbol>
     <symbol id="i-tag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12V4h8l8 8-8 8z"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/></g></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v3M9 20h6M10 17h4v3h-4z"/></g></symbol>
+    <symbol id="i-cup" viewBox="0 0 64 64"><g fill="currentColor"><path d="M18 6h28v18a14 14 0 0 1-28 0z"/><path d="M26 40h12l2 8H24z"/><path d="M19 56h26l-3-8H22z"/></g><path d="M18 12H8v6c0 7 5 12 12 13M46 12h10v6c0 7-5 12-12 13" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 12v10" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></g></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3c5 0 6 10 11 10h4"/><path d="M3 17h3c1.6 0 2.8-.8 3.7-2M14 9c.9-1.2 2-2 3.5-2H21"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></g></symbol>
   </defs>
 </svg>
 
@@ -61,7 +67,7 @@
       </button>
     </div>
     <div class="home-center">
-      <h1 class="brand" aria-label="SGVApp"><span aria-hidden="true" style="--n:0">S</span><span aria-hidden="true" style="--n:1">G</span><span aria-hidden="true" style="--n:2">V</span><span aria-hidden="true" class="app" style="--n:3">A</span><span aria-hidden="true" class="app" style="--n:4">p</span><span aria-hidden="true" class="app" style="--n:5">p</span></h1>
+      <h1 class="brand" aria-label="Volei App"><span aria-hidden="true" style="--n:0">V</span><span aria-hidden="true" style="--n:1">o</span><span aria-hidden="true" style="--n:2">l</span><span aria-hidden="true" style="--n:3">e</span><span aria-hidden="true" style="--n:4">i</span><span aria-hidden="true" class="app" style="--n:5">A</span><span aria-hidden="true" class="app" style="--n:6">p</span><span aria-hidden="true" class="app" style="--n:7">p</span></h1>
       <p class="tagline">Seu jogo. Suas equipes. Seu placar.</p>
       <div class="home-actions">
         <a class="big-btn big-btn--a" href="#/sorteio">
@@ -71,6 +77,11 @@
         <a class="big-btn big-btn--b" href="#/placar">
           <svg class="ico"><use href="#i-score"/></svg>
           <span>Abrir Placar</span>
+        </a>
+        <a class="big-btn big-btn--c is-locked" id="btn-camp" href="#/campeonato" aria-disabled="true">
+          <svg class="ico"><use href="#i-trophy"/></svg>
+          <span class="lbl"><span>Campeonato</span><small id="camp-sub">Libera após o sorteio</small></span>
+          <svg class="ico lock" aria-hidden="true"><use href="#i-lock"/></svg>
         </a>
       </div>
     </div>
@@ -136,11 +147,26 @@
     </footer>
   </section>
 
+  <!-- ============ CAMPEONATO ============ -->
+  <section class="view" id="view-campeonato" data-view="campeonato" hidden>
+    <header class="topbar">
+      <a class="icon-btn" href="#/home" aria-label="Voltar ao início"><svg class="ico"><use href="#i-back"/></svg></a>
+      <h2>Campeonato</h2>
+      <button class="icon-btn" id="camp-new" type="button" aria-label="Novo campeonato" hidden><svg class="ico"><use href="#i-reset"/></svg></button>
+    </header>
+    <div class="camp-body" id="camp-body"></div>
+    <footer class="credits">
+      <span>SGV-App Todos os Direitos Reservados</span>
+      <span>Desenvolvido por Daniel Rezende</span>
+    </footer>
+  </section>
+
   <!-- ============ PLACAR ============ -->
   <section class="view" id="view-placar" data-view="placar" hidden>
     <header class="topbar topbar--slim">
-      <a class="icon-btn" href="#/home" aria-label="Voltar ao início"><svg class="ico"><use href="#i-back"/></svg></a>
-      <span class="topbar-brand">SGV<span>App</span></span>
+      <a class="icon-btn" id="placar-back" href="#/home" aria-label="Voltar ao início"><svg class="ico"><use href="#i-back"/></svg></a>
+      <span class="topbar-brand" id="brand-def">Volei<span>App</span></span>
+      <span class="topbar-brand match-lbl" id="brand-match" hidden></span>
       <span class="topbar-spacer"></span>
     </header>
 
@@ -160,6 +186,7 @@
       <button class="ctrl" type="button" id="btn-rename"><svg class="ico"><use href="#i-tag"/></svg><span>Nomes</span></button>
       <button class="ctrl" type="button" id="btn-reset"><svg class="ico"><use href="#i-reset"/></svg><span>Reiniciar</span></button>
       <button class="ctrl" type="button" id="btn-full"><svg class="ico"><use href="#i-fullscreen" id="full-icon"/></svg><span>Tela cheia</span></button>
+      <button class="ctrl ctrl--finish" type="button" id="btn-finish" hidden><svg class="ico"><use href="#i-flag"/></svg><span>Finalizar</span></button>
     </footer>
   </section>
 
@@ -179,9 +206,11 @@
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+<script src="js/rede.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/app.js"></script>
 <script src="js/sorteio.js"></script>
 <script src="js/placar.js"></script>
+<script src="js/campeonato.js"></script>
 </body>
 </html>

@@ -109,11 +109,18 @@
 
   /* ---- Navegação por hash (sem recarregar) ---- */
   var modules = {};
-  var VIEWS = ['home', 'sorteio', 'placar'];
+  var VIEWS = ['home', 'sorteio', 'placar', 'campeonato'];
+  var TITLES = { sorteio: 'Sorteio', placar: 'Placar', campeonato: 'Campeonato' };
 
   function route() {
     var name = (location.hash.replace(/^#\/?/, '') || 'home');
     if (VIEWS.indexOf(name) < 0) name = 'home';
+    /* Campeonato só é liberado depois do sorteio de equipes */
+    if (name === 'campeonato' && SGV.campeonato && !SGV.campeonato.unlocked()) {
+      toast('Sorteie as equipes para liberar o Campeonato');
+      location.hash = '#/home';
+      return;
+    }
     VIEWS.forEach(function (v) {
       var el = document.getElementById('view-' + v);
       var show = v === name;
@@ -122,7 +129,7 @@
     });
     if (name !== 'home') document.getElementById('view-home').classList.remove('intro');
     window.scrollTo(0, 0);
-    document.title = name === 'home' ? 'SGVApp' : 'SGVApp · ' + (name === 'sorteio' ? 'Sorteio' : 'Placar');
+    document.title = name === 'home' ? 'SGVApp' : 'SGVApp · ' + TITLES[name];
   }
 
   SGV.h = h;
